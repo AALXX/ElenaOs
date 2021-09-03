@@ -13,6 +13,8 @@ start:
     call enable_paging
 
     lgdt [gdt64.pointer]
+
+	;Far jump to 64
     jmp gdt64.code_segment:long_mode_start
     
     hlt
@@ -131,6 +133,8 @@ gdt64:
 	dq 0 ; zero entry
 .code_segment: equ $ - gdt64
 	dq (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; code segment
+.data_segment: equ $ - gdt64
+	dq (1<<44) | (1<<47) | (1<<41)
 .pointer:
 	dw $ - gdt64 - 1 ; length
 	dq gdt64 ; address
