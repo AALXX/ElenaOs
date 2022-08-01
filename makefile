@@ -1,30 +1,37 @@
+ASM=nasm
 
-kernel_source_files := $(shell find src/kernel -name *.cpp)
-kernel_object_files := $(patsubst src/kernel/%.cpp, build/kernel/%.o, $(kernel_source_files))
+SRC_DIR=src
+BUILD_DIR=build
 
-x86_64_c_source_files := $(shell find src/x86_64 -name *.cpp)
-x86_64_c_object_files := $(patsubst src/x86_64/%.cpp, build/x86_64/%.o, $(x86_64_c_source_files))
+.PHONY: all floppy_image kernel bootloader clean always
 
-x86_64_asm_source_files := $(shell find src/x86_64 -name *.asm)
-x86_64_asm_object_files := $(patsubst src/x86_64/%.asm, build/x86_64/%.o, $(x86_64_asm_source_files))
 
-x86_64_object_files := $(x86_64_c_object_files) $(x86_64_asm_object_files)
+#floppy image
+floppy_image: $(BUILD_DIR)/main_floppy.img
 
-$(kernel_object_files): build/kernel/%.o : src/kernel/%.cpp
-	mkdir -p $(dir $@) && \
-	x86_64-elf-gcc -c -I src/kernel/interfaces -ffreestanding $(patsubst build/kernel/%.o, src/kernel/%.cpp, $@) -o $@
+$(BUILD_DIR)/main_floppy.img: bootloader kernel
+	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img bs=512 count=2880
+	mkfs.fat -F 12 -n "NBOS" $(BUILD_DIR)/main_floppy.img
+	dd if=$(BUILD_DIR)/bootloader.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
+	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin "::kernel.bin"
 
-$(x86_64_c_object_files): build/x86_64/%.o : src/x86_64/%.cpp
-	mkdir -p $(dir $@) && \
-	x86_64-elf-gcc -c -I src/kernel/interfaces -ffreestanding $(patsubst build/x86_64/%.o, src/x86_64/%.cpp, $@) -o $@
+#bootloader
+bootloader: $(BUILD_DIR)/bootloader.bin
 
-$(x86_64_asm_object_files): build/x86_64/%.o : src/x86_64/%.asm
-	mkdir -p $(dir $@) && \
-	nasm -f elf64 $(patsubst build/x86_64/%.o, src/x86_64/%.asm, $@) -o $@
+$(BUILD_DIR)/bootloader.bin: always
+	$(ASM) $(SRC_DIR)/bootloader/boot.asm -f bin -o $(BUILD_DIR)/bootloader.bin
 
-.PHONY: build-x86_64
-build-x86_64: $(kernel_object_files) $(x86_64_object_files)
-	mkdir -p dist/x86_64 && \
-	x86_64-elf-ld -n -o dist/x86_64/kernel.bin -T targets/x86_64/linker.ld $(kernel_object_files) $(x86_64_object_files) && \
-	cp dist/x86_64/kernel.bin targets/x86_64/iso/boot/kernel.bin && \
-	grub-mkrescue /usr/lib/grub/i386-pc -o dist/x86_64/kernel.iso targets/x86_64/iso
+#kernel
+kernel: $(BUILD_DIR)/kernel.bin
+
+$(BUILD_DIR)/kernel.bin: always
+	$(ASM) $(SRC_DIR)/kernel/main.asm -f bin -o $(BUILD_DIR)/kernel.bin
+
+
+#always
+always:
+	mkdir -p $(BUILD_DIR)
+
+#clean
+clean:
+	rm -fr $(BUILD_DIR)/*
