@@ -73,3 +73,8 @@ always:
 #
 clean:
 	rm -rf $(BUILD_DIR)/*
+
+
+build-run:
+	make
+	qemu-system-x86_64.exe build/BootLoader.bin

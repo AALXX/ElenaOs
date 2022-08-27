@@ -3,6 +3,7 @@
 
 void __attribute((cdecl)) _start(uint16_t bootDrive)
 {
-    SetCursorPosition(PositionFromCoords(10, 12));
+    SetCursorPosition(PositionFromCoords(0, 0));
+    puts("CUM and \n\rpiss");
     return;
 }

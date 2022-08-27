@@ -3,7 +3,7 @@ PROGRAM_SPACE equ 0x8000
 ReadDisk:
     mov ah, 0x02 
     mov bx, PROGRAM_SPACE
-    mov al, 16      ;number of sectors that we read
+    mov al, 17      ;number of sectors that we read
     mov dl, [BOOT_DISK]
     mov ch, 0x00
     mov dh, 0x00

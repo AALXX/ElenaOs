@@ -1,9 +1,10 @@
 #include "stdio.h"
+#define VGA_MEMORY (uint8_t *)0xb8000
 
 const unsigned SCREEN_WIDTH = 80;
 const unsigned SCREEN_HEIGHT = 25;
 
-uint16_t *g_ScreenBuffer = (uint16_t *)0xb8000;
+uint8_t *g_ScreenBuffer = (uint8_t *)0xb8000;
 uint16_t CursorPosition;
 int g_ScreenX = 0, g_ScreenY = 0;
 
@@ -24,45 +25,32 @@ void SetCursorPosition(uint16_t position)
     CursorPosition = position;
 }
 
-uint16_t PositionFromCoords(int16_t x, uint16_t y)
+uint16_t PositionFromCoords(uint16_t x, uint16_t y)
 {
     return y * SCREEN_WIDTH + x;
 }
 
-void putchr(int x, int y, char c)
-{
-    g_ScreenBuffer[2 * (y * SCREEN_WIDTH + x)] = c;
-}
-
 void putc(char c)
 {
+    uint16_t index = CursorPosition;
+
     switch (c)
     {
     case '\n':
-        g_ScreenX = 0;
-        g_ScreenY++;
-        break;
-
-    case '\t':
-        for (int i = 0; i < 4 - (g_ScreenX % 4); i++)
-            putc(' ');
+        index += SCREEN_WIDTH;
         break;
 
     case '\r':
-        g_ScreenX = 0;
+        index -= index % SCREEN_WIDTH;
         break;
 
     default:
-        putchr(g_ScreenX, g_ScreenY, c);
-        g_ScreenX++;
+        g_ScreenBuffer[CursorPosition * 2] = c;
+        index++;
         break;
     }
 
-    if (g_ScreenX >= SCREEN_WIDTH)
-    {
-        g_ScreenY++;
-        g_ScreenX = 0;
-    }
+    SetCursorPosition(index);
 }
 
 void puts(const char *str)
