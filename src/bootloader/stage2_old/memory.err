@@ -1,4 +1,0 @@
-stdint.h(20): Warning! W138: No newline at end of file
-memory.h(8): Warning! W138: No newline at end of file
-memory.c(42): Warning! W138: No newline at end of file
-memory.c(37): Warning! W303: Parameter 'size' has been defined, but not referenced

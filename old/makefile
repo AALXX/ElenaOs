@@ -6,19 +6,6 @@ BUILD_DIR=build
 BOOTLOADER_DIR=src/bootloader
 KERNEL_DIR=src/kernel
 
-HEADERS_C = $(wildcard $(KERNEL_DIR)/*.h) \
-										$(wildcard $(KERNEL_DIR)/*/*.h) \
-										$(wildcard $(KERNEL_DIR)/*/*/*.h) \
-										$(wildcard $(KERNEL_DIR)/*/*/*/*.h)
-
-SOURCES_C = $(wildcard $(KERNEL_DIR)/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*/*/*.c) \
-
-OBJECTS_C = $(patsubst $(KERNEL_DIR)/%.c, $(BUILD_DIR)/kernel/c/%.obj, $(SOURCES_C))
-
-
 .PHONY: all image kernel bootloader clean always
 
 all: image 
@@ -47,18 +34,12 @@ $(BUILD_DIR)/stage2.o: always
 	$(ASM) $(BOOTLOADER_DIR)/stage2/stage2.asm -f elf64 -o $(BUILD_DIR)/stage2.o
 
 
-kernel: $(BUILD_DIR)/kernel.bin
 
-$(BUILD_DIR)/kernel.bin: $(OBJECTS_C)
-	@$(CC_LINKER) -T"linker.ld" -o $@ $^
-	@echo "--> Created:  kernel.bin"
 
-$(BUILD_DIR)/kernel/c/%.obj: $(KERNEL_DIR)/%.c $(HEADERS_C)
-	@mkdir -p $(@D)
-	@$(CC) -Ttext 0x8000  -ffreestanding -mno-red-zone -m64 -c -o $@ $<
-	@echo "--> Compiled: " $<
+kernel: $(BUILD_DIR)/kernel.o
 
 $(BUILD_DIR)/kernel.o: always
+	$(CC) -Ttext 0x8000  -ffreestanding -mno-red-zone -m64 -c "$(KERNEL_DIR)/Kernel.cpp" -o "$(BUILD_DIR)/kernel.o"
 	$(CC_LINKER) -T"linker.ld"
 
 #
