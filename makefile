@@ -1,22 +1,22 @@
 ASM=nasm
-CC=x86_64-elf-gcc 
+CC=x86_64-elf-g++ 
 CC_LINKER= x86_64-elf-ld
 
 BUILD_DIR=build
 BOOTLOADER_DIR=src/bootloader
 KERNEL_DIR=src/kernel
 
-HEADERS_C = $(wildcard $(KERNEL_DIR)/*.h) \
+HEADERS_CPP = $(wildcard $(KERNEL_DIR)/*.h) \
 										$(wildcard $(KERNEL_DIR)/*/*.h) \
 										$(wildcard $(KERNEL_DIR)/*/*/*.h) \
 										$(wildcard $(KERNEL_DIR)/*/*/*/*.h)
 
-SOURCES_C = $(wildcard $(KERNEL_DIR)/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*/*.c) \
-										$(wildcard $(KERNEL_DIR)/*/*/*/*.c) \
+SOURCES_CPP = $(wildcard $(KERNEL_DIR)/*.cpp) \
+										$(wildcard $(KERNEL_DIR)/*/*.cpp) \
+										$(wildcard $(KERNEL_DIR)/*/*/*.cpp) \
+										$(wildcard $(KERNEL_DIR)/*/*/*/*.cpp) \
 
-OBJECTS_C = $(patsubst $(KERNEL_DIR)/%.c, $(BUILD_DIR)/kernel/c/%.obj, $(SOURCES_C))
+SOBJECTS_CPP = $(patsubst $(KERNEL_DIR)/%.cpp, $(BUILD_DIR)/kernel/c/%.obj, $(SOURCES_CPP))
 
 
 .PHONY: all image kernel bootloader clean always
@@ -49,11 +49,11 @@ $(BUILD_DIR)/stage2.o: always
 
 kernel: $(BUILD_DIR)/kernel.bin
 
-$(BUILD_DIR)/kernel.bin: $(OBJECTS_C)
+$(BUILD_DIR)/kernel.bin: $(SOBJECTS_CPP)
 	@$(CC_LINKER) -T"linker.ld" -o $@ $^
 	@echo "--> Created:  kernel.bin"
 
-$(BUILD_DIR)/kernel/c/%.obj: $(KERNEL_DIR)/%.c $(HEADERS_C)
+$(BUILD_DIR)/kernel/c/%.obj: $(KERNEL_DIR)/%.cpp $(HEADERS_CPP)
 	@mkdir -p $(@D)
 	@$(CC) -Ttext 0x8000  -ffreestanding -mno-red-zone -m64 -c -o $@ $<
 	@echo "--> Compiled: " $<
