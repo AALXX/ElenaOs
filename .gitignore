@@ -1,3 +1,5 @@
 /build
 /dist
 /Internal-tools
+/toolchains
+/build_scripts

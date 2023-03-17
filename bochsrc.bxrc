@@ -1,8 +1,8 @@
 megs: 128
 romimage: file="C:/Program Files/Bochs-2.7/BIOS-bochs-latest", address=0xfffe0000
 vgaromimage: file="C:/Program Files/Bochs-2.7/VGABIOS-lgpl-latest"
-floppya: 1_44=build/BootLoader.bin, status=inserted
-boot:floppy
+ata0-master: type=disk, path="build/x86_64_debug/image.img", cylinders=1024, heads=4, spt=32
+
+boot:disk
 mouse: enabled = 0
 display_library: win32, options="gui_debug"
-config_interface: win32config

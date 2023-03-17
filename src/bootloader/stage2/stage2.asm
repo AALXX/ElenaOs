@@ -1,8 +1,15 @@
-jmp EnterProtectedMode
+bits 16
 
-%include "src/bootloader/stage2/gdt.asm"
+section .entry
 
-EnterProtectedMode:
+extern __bss_start
+extern __end
+extern _init
+
+global entry
+
+
+entry:
     cli
     ; save boot drive
     mov [g_BootDrive], dl
@@ -29,8 +36,8 @@ EnableA20:
 
 
 [bits 32]
-%include "src/bootloader/stage2/CPUID.asm"
-%include "src/bootloader/stage2/SimplePaging.asm"
+%include "CPUID.asm"
+%include "SimplePaging.asm"
 StartProtectedMode:
 	mov ax, dataseg
 	mov ds, ax
@@ -46,7 +53,7 @@ StartProtectedMode:
     jmp codeseg:Start64Bit
 
 [bits 64]
-[extern _start]
+[extern start]
 
 Start64Bit:
     mov edi, 0xb8000
@@ -58,9 +65,49 @@ Start64Bit:
     xor rdx, rdx
     mov dl, [g_BootDrive]
     push rdx
-    call _start
+    call start
     
-    jmp $
+    cli
+    hlt
 g_BootDrive: db 0
 
-times 2048-($-$$) db 0
+
+[bits 16]
+
+gdt_nulldesc:
+	dd 0
+	dd 0	
+gdt_codedesc:
+	dw 0xFFFF			; Limit
+	dw 0x0000			; Base (low)
+	db 0x00				; Base (medium)
+	db 10011010b		; Flags
+	db 11001111b		; Flags + Upper Limit
+	db 0x00				; Base (high)
+gdt_datadesc:
+	dw 0xFFFF
+	dw 0x0000
+	db 0x00
+	db 10010010b
+	db 11001111b
+	db 0x00
+
+gdt_end:
+
+gdt_descriptor:
+	gdt_size: 
+		dw gdt_end - gdt_nulldesc - 1
+		dq gdt_nulldesc
+
+codeseg equ gdt_codedesc - gdt_nulldesc
+dataseg equ gdt_datadesc - gdt_nulldesc
+[bits 32]
+
+EditGDT:
+	mov [gdt_codedesc + 6], byte 10101111b
+
+	mov [gdt_datadesc + 6], byte 10101111b
+	ret
+
+[bits 16]
+ 

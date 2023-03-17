@@ -1,4 +1,6 @@
-PageTableEntry equ 0x1000
+[bits 32]
+PageTableEntry equ 0x1000	
+
 SetUpIdentityPaging:
     mov edi, PageTableEntry
     mov cr3, edi

@@ -1,3 +1,4 @@
+[bits 32]
 DetectCPUID:
     pushfd      ;save EFLAGS
     pop eax
